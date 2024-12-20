@@ -7,11 +7,11 @@ import com.example.quest_application.service.AnswerService;
 import com.example.quest_application.service.QuestionService;
 import com.example.quest_application.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/answers")
@@ -29,31 +29,24 @@ public class AnswerController {
     // Cevap ekle
     @PostMapping
     public ResponseEntity<Answer> addAnswer(@RequestBody Answer answer, Authentication authentication) {
-        // JWT token'dan kullanıcı adını al
         String username = authentication.getName();
-
-        // Kullanıcıyı bul
         User user = userService.getUserByUsername(username);
-
-        // Sorunun var olup olmadığını kontrol et
         Question question = questionService.getQuestionById(answer.getQuestion().getId());
         if (question == null) {
-            return ResponseEntity.status(404).body(null); // Sorunun bulunamadığı durumda hata
+            return ResponseEntity.status(404).body(null);
         }
-
-        // Kullanıcıyı ve soruyu cevapla ilişkilendir
         answer.setUser(user);
         answer.setQuestion(question);
-
-        // Cevabı kaydet
         Answer savedAnswer = answerService.addAnswer(answer);
         return ResponseEntity.ok(savedAnswer);
     }
 
-    // Belirli bir soruya ait cevapları getir
+    // Belirli bir soruya ait cevapları getir (pagination destekli)
     @GetMapping("/question/{questionId}")
-    public ResponseEntity<List<Answer>> getAnswersByQuestionId(@PathVariable Long questionId) {
-        return ResponseEntity.ok(answerService.getAnswersByQuestionId(questionId));
+    public ResponseEntity<Page<Answer>> getAnswersByQuestionId(
+            @PathVariable Long questionId,
+            Pageable pageable) {
+        return ResponseEntity.ok((Page<Answer>) answerService.getAnswersByQuestionId(questionId, pageable));
     }
 
     // Belirli bir cevabı ID ile getir
@@ -66,14 +59,9 @@ public class AnswerController {
     // Cevap güncelle
     @PutMapping("/{id}")
     public ResponseEntity<Answer> updateAnswer(@PathVariable Long id, @RequestBody Answer answer, Authentication authentication) {
-        // JWT token'dan kullanıcı adını al
         String username = authentication.getName();
-
-        // Kullanıcıyı bul
         User user = userService.getUserByUsername(username);
-        answer.setUser(user); // Güncellenen cevap için kullanıcıyı ayarla
-
-        // Güncellemeyi yap
+        answer.setUser(user);
         Answer updatedAnswer = answerService.updateAnswer(id, answer);
         return ResponseEntity.ok(updatedAnswer);
     }
@@ -81,19 +69,12 @@ public class AnswerController {
     // Cevap sil
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteAnswer(@PathVariable Long id, Authentication authentication) {
-        // JWT token'dan kullanıcı adını al
         String username = authentication.getName();
-
-        // Kullanıcıyı bul
         User user = userService.getUserByUsername(username);
-
-        // Cevabın varlığını ve kullanıcı yetkisini kontrol et
         Answer answer = answerService.getAnswerById(id);
         if (!answer.getUser().getId().equals(user.getId())) {
             return ResponseEntity.status(403).body("You can only delete your own answers.");
         }
-
-        // Cevabı sil
         answerService.deleteAnswer(id);
         return ResponseEntity.ok("Answer deleted successfully.");
     }

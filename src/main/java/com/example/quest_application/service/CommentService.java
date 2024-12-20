@@ -9,9 +9,9 @@ import com.example.quest_application.repos.CommentRepository;
 import com.example.quest_application.repos.QuestionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class CommentService {
@@ -40,14 +40,14 @@ public class CommentService {
         return savedComment;
     }
 
-    public List<Comment> getCommentsByQuestion(Long questionId) {
-        logger.info("Fetching comments for question ID: {}", questionId);
-        return commentRepository.findByQuestionId(questionId);
+    public Page<Comment> getCommentsByQuestion(Long questionId, Pageable pageable) {
+        logger.info("Fetching comments for question ID: {} with pagination", questionId);
+        return (Page<Comment>) commentRepository.findByQuestionId(questionId, pageable);
     }
 
-    public List<Comment> getCommentsByAnswer(Long answerId) {
-        logger.info("Fetching comments for answer ID: {}", answerId);
-        return commentRepository.findByAnswerId(answerId);
+    public Page<Comment> getCommentsByAnswer(Long answerId, Pageable pageable) {
+        logger.info("Fetching comments for answer ID: {} with pagination", answerId);
+        return (Page<Comment>) commentRepository.findByAnswerId(answerId, pageable);
     }
 
     public Comment addCommentToAnswer(Long answerId, Comment comment) {

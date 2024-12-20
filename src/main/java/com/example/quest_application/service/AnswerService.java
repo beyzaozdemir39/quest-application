@@ -5,6 +5,8 @@ import com.example.quest_application.exception.ResourceNotFoundException;
 import com.example.quest_application.repos.AnswerRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,9 +29,8 @@ public class AnswerService {
         return savedAnswer;
     }
 
-    public List<Answer> getAnswersByQuestionId(Long questionId) {
-        logger.info("Fetching answers for question ID: {}", questionId);
-        return answerRepository.findByQuestionId(questionId);
+    public Page<Answer> getAnswersByQuestionId(Long questionId, Pageable pageable) {
+        return (Page<Answer>) answerRepository.findByQuestionId(questionId, pageable);
     }
 
     public Answer getAnswerById(Long id) {
